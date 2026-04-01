@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Calendar,
   Newspaper,
@@ -20,7 +21,7 @@ import { cn } from "@/lib/utils";
 interface NavItem {
   icon: React.ReactNode;
   label: string;
-  active?: boolean;
+  path?: string;
   badge?: string;
   children?: NavItem[];
 }
@@ -34,18 +35,18 @@ const navGroups: NavGroup[] = [
   {
     title: "МОИ ИНСТРУМЕНТЫ",
     items: [
-      { icon: <Calendar size={16} />, label: "Мое расписание" },
-      { icon: <Newspaper size={16} />, label: "Новости", badge: "new" },
-      { icon: <Zap size={16} />, label: "Мероприятия" },
+      { icon: <Calendar size={16} />, label: "Мое расписание", path: "/schedule" },
+      { icon: <Newspaper size={16} />, label: "Новости", path: "/news", badge: "new" },
+      { icon: <Zap size={16} />, label: "Мероприятия", path: "/events" },
     ],
   },
   {
     title: "УЧЕБНЫЙ ПРОЦЕСС",
     items: [
-      { icon: <Clock size={16} />, label: "Поурочное планирование" },
-      { icon: <BookOpen size={16} />, label: "Мои классы", active: true },
-      { icon: <ClipboardList size={16} />, label: "Домашние задания" },
-      { icon: <Box size={16} />, label: "Проектная деятельность" },
+      { icon: <Clock size={16} />, label: "Поурочное планирование", path: "/lesson-planning" },
+      { icon: <BookOpen size={16} />, label: "Мои классы", path: "/my-classes" },
+      { icon: <ClipboardList size={16} />, label: "Домашние задания", path: "/homework" },
+      { icon: <Box size={16} />, label: "Проектная деятельность", path: "/projects" },
     ],
   },
   {
@@ -54,6 +55,7 @@ const navGroups: NavGroup[] = [
       {
         icon: <BarChart2 size={16} />,
         label: "Отчеты учителя",
+        path: "/reports",
         children: [],
       },
     ],
@@ -64,22 +66,30 @@ const navGroups: NavGroup[] = [
       {
         icon: <CalendarDays size={16} />,
         label: "Планирование",
+        path: "/extracurricular-planning",
         children: [],
       },
-      { icon: <Users size={16} />, label: "Журналы моих групп" },
-      { icon: <Star size={16} />, label: "План деятельности" },
+      { icon: <Users size={16} />, label: "Журналы моих групп", path: "/group-journals" },
+      { icon: <Star size={16} />, label: "План деятельности", path: "/activity-plan" },
     ],
   },
 ];
 
 export function MeshSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const toggleExpand = (label: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
-    );
+  const handleNavClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+    }
+  };
+
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    if (path === "/") return location.pathname === "/";
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
@@ -113,46 +123,41 @@ export function MeshSidebar() {
                 {group.title}
               </div>
             )}
-            {group.items.map((item) => (
-              <div key={item.label}>
-                <button
-                  onClick={() => item.children && toggleExpand(item.label)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
-                    item.active
-                      ? "text-white bg-white/10 border-l-2 border-blue-400"
-                      : "text-white/65 hover:text-white hover:bg-white/8",
-                    collapsed && "justify-center px-2"
-                  )}
-                  style={
-                    item.active
-                      ? {}
-                      : undefined
-                  }
-                >
-                  <span className="flex-shrink-0 opacity-80">{item.icon}</span>
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 font-medium">{item.label}</span>
-                      {item.badge && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500 text-white font-semibold uppercase">
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.children && (
-                        <ChevronRight
-                          size={14}
-                          className={cn(
-                            "opacity-50 transition-transform",
-                            expandedItems.includes(item.label) && "rotate-90"
-                          )}
-                        />
-                      )}
-                    </>
-                  )}
-                </button>
-              </div>
-            ))}
+            {group.items.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => handleNavClick(item.path)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
+                      active
+                        ? "text-white bg-white/10 border-l-2 border-blue-400"
+                        : "text-white/65 hover:text-white hover:bg-white/8",
+                      collapsed && "justify-center px-2"
+                    )}
+                  >
+                    <span className="flex-shrink-0 opacity-80">{item.icon}</span>
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 font-medium">{item.label}</span>
+                        {item.badge && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500 text-white font-semibold uppercase">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.children && (
+                          <ChevronRight
+                            size={14}
+                            className="opacity-50"
+                          />
+                        )}
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ))}
       </nav>
