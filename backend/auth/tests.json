@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Register new user",
+    "method": "POST",
+    "path": "/register",
+    "body": {
+      "login": "test_teacher",
+      "password": "password123",
+      "full_name": "Иванова Мария",
+      "role": "teacher"
+    },
+    "expectedStatus": 201
+  },
+  {
+    "name": "Login with valid credentials",
+    "method": "POST",
+    "path": "/login",
+    "body": {
+      "login": "test_teacher",
+      "password": "password123"
+    },
+    "expectedStatus": 200
+  },
+  {
+    "name": "Login with wrong password",
+    "method": "POST",
+    "path": "/login",
+    "body": {
+      "login": "test_teacher",
+      "password": "wrongpassword"
+    },
+    "expectedStatus": 401
+  }
+]
